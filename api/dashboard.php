@@ -1,3 +1,13 @@
+<?php
+// dashboard.php (User-focused)
+// Protect page
+session_start();
+if (empty($_SESSION['user'])) {
+  header('Location: login.html');
+  exit;
+}
+$user = $_SESSION['user'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +18,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
   <div class="min-h-screen flex">
+
     <!-- Side Menu -->
     <aside class="w-64 bg-white border-r hidden md:flex md:flex-col">
       <div class="px-5 py-4 border-b">
@@ -15,13 +26,15 @@
           <div class="h-9 w-9 rounded bg-blue-700"></div>
           <div>
             <p class="text-sm text-gray-500">Signed in as</p>
-            <p id="signedInName" class="font-semibold text-gray-800">Loading…</p>
+            <p class="font-semibold text-gray-800">
+              <?php echo htmlspecialchars($user['name'] ?: $user['email']); ?>
+            </p>
           </div>
         </div>
       </div>
 
       <nav class="flex-1 px-3 py-4 space-y-1">
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium">
+        <a href="dashboard.php" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium">
           <span>🏠</span> <span>Dashboard</span>
         </a>
         <a href="#units" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100">
@@ -110,26 +123,7 @@
   </div>
 
   <script>
-    // 1) Auth check on load
-    (async function checkAuth() {
-      try {
-        const r = await fetch('api/me.php', { credentials: 'include' });
-        const { user } = await r.json();
-        if (!user) {
-          // Not logged in → go to login page
-          window.location.href = 'login.html';
-          return;
-        }
-        // Show name/email in sidebar
-        document.getElementById('signedInName').textContent = user.name || user.email || 'User';
-        // After auth, load rooms
-        loadRooms();
-      } catch {
-        window.location.href = 'login.html';
-      }
-    })();
-
-    // 2) Rooms + Filters
+    // Elements
     const grid   = document.getElementById('units');
     const empty  = document.getElementById('empty');
     const selLoc = document.getElementById('filterLocation');
@@ -138,8 +132,10 @@
     const minLbl = document.getElementById('minPriceLabel');
     const maxLbl = document.getElementById('maxPriceLabel');
 
+    // Data cache
     let allRooms = [];
 
+    // Fetch rooms
     async function loadRooms() {
       empty.classList.add('hidden');
       grid.innerHTML = '';
@@ -157,6 +153,7 @@
       }
     }
 
+    // Build location dropdown from rooms
     function buildLocationFilter(rooms) {
       const unique = Array.from(new Set(
         rooms.map(r => (r.location || '').trim()).filter(Boolean)
@@ -165,6 +162,7 @@
         unique.map(loc => `<option value="${escapeHtml(loc)}">${escapeHtml(loc)}</option>`).join('');
     }
 
+    // Render after applying filters
     function renderFiltered() {
       minLbl.textContent = minR.value;
       maxLbl.textContent = maxR.value;
@@ -183,6 +181,7 @@
       renderCards(list);
     }
 
+    // Render cards
     function renderCards(rooms) {
       if (!rooms || rooms.length === 0) {
         grid.innerHTML = '';
@@ -220,6 +219,7 @@
       }).join('');
     }
 
+    // Escape helpers
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, m => ({
         '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -227,15 +227,19 @@
     }
     function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
 
+    // Events
     [selLoc, minR, maxR].forEach(el => el.addEventListener('input', renderFiltered));
 
-    // 3) Logout
+    // Logout
     const doLogout = async () => {
       try { await fetch('api/logout.php', { credentials: 'include' }); } catch {}
       window.location.href = 'login.html';
     };
     document.getElementById('logoutBtn')?.addEventListener('click', doLogout);
     document.getElementById('logoutBtnMobile')?.addEventListener('click', doLogout);
+
+    // Init
+    loadRooms();
   </script>
 </body>
 </html>

@@ -2,63 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StayFind Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - StayFind</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-
-  <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Login to StayFind</h2>
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">Client Login</h2>
 
     <form id="loginForm" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Username</label>
-        <input type="text" name="username" required
-          class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-500">
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input type="password" name="password" required
-          class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-500">
-      </div>
-
-      <button type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+      <input type="text" name="email" placeholder="Email or Username" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+      <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+      <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800 transition">
         Login
       </button>
     </form>
 
-    <p class="mt-4 text-center text-sm text-gray-600">
-      Don't have an account?
-      <a href="register.html" class="text-blue-600 hover:underline">Register here</a>
+    <p id="message" class="mt-4 text-center text-sm text-gray-600"></p>
+
+    <p class="mt-6 text-sm text-center text-gray-500">
+      Don’t have an account? <a href="register.html" class="text-blue-600 hover:underline">Register here</a>
     </p>
   </div>
 
   <script>
-    const form = document.getElementById('loginForm');
-    form.addEventListener('submit', async (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData.entries());
+      const form = e.target;
+      const data = new FormData(form);
+      const msg = document.getElementById('message');
 
-      const res = await fetch('api/login.php', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      try {
+        const res = await fetch('api/login_client.php', { method: 'POST', body: data, credentials: 'include' });
+        const result = await res.json();
 
-      const result = await res.json();
+        msg.textContent = result.message || 'Something happened';
+        msg.classList.remove('text-red-500', 'text-green-500');
+        msg.classList.add(result.success ? 'text-green-500' : 'text-red-500');
 
-      if (result.success) {
-        alert("Login successful!");
-        localStorage.setItem('user', JSON.stringify(result.user));
-        window.location.href = "dashboard.html";
-      } else {
-        alert(result.message);
+        if (result.success) {
+          form.reset();
+          // Redirect to dashboard instead of index.html
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+        }
+      } catch (err) {
+        console.error(err);
+        msg.textContent = 'Network error.';
+        msg.classList.remove('text-green-500');
+        msg.classList.add('text-red-500');
       }
     });
   </script>
-
 </body>
 </html>

@@ -1,14 +1,20 @@
 <?php
+declare(strict_types=1);
 header('Content-Type: application/json');
-include '../includes/db.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/auth.php';
 
-$data = json_decode(file_get_contents("php://input"), true);
-$username = $data['username'];
-$password = $data['password'];
+$input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+$email = strtolower(trim($input['email'] ?? ''));
+$pass = $input['password'] ?? '';
 
-$sql = "SELECT * FROM users WHERE username=? AND password=?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ss", $username, $password);
-$stmt->execute();
-$result = $stmt->get_result();
-$
+$stmt = $pdo->prepare('SELECT id,name,email,password_hash,role FROM users WHERE email=?');
+$stmt->execute([$email]);
+$user = $stmt->fetch();
+if (!$user || !password_verify($pass, $user['password_hash'])) {
+  http_response_code(401);
+  echo json_encode(['error' => 'Invalid credentials']);
+  exit;
+}
+set_user_session($user);
+echo json_encode(['ok' => true, 'user' => $_SESSION['user']]);

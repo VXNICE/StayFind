@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - StayFind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <header class="bg-blue-700 text-white py-4">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold">StayFind Dashboard</h1>
+      <a href="rooms.html" class="text-white hover:underline">← Back to Rooms</a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-6">Welcome, Manager/Owner</h2>
+
+    <div id="stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <!-- Dashboard cards -->
+    </div>
+
+    <section>
+      <h3 class="text-xl font-semibold mb-4">Recent Bookings</h3>
+      <div id="recentBookings" class="space-y-4">
+        <!-- Booking list will be loaded here -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    async function loadDashboard() {
+      const res = await fetch(`api/get_dashboard_data.php?role=owner&user_id=3`);
+      const data = await res.json();
+
+      const statsContainer = document.getElementById('stats');
+      statsContainer.innerHTML = `
+        <div class="bg-white p-6 rounded shadow text-center">
+          <h4 class="text-lg font-semibold text-gray-700">Total Rooms</h4>
+          <p class="text-3xl font-bold text-blue-700">${data.total_rooms}</p>
+        </div>
+        <div class="bg-white p-6 rounded shadow text-center">
+          <h4 class="text-lg font-semibold text-gray-700">Total Bookings</h4>
+          <p class="text-3xl font-bold text-blue-700">${data.total_bookings}</p>
+        </div>
+        <div class="bg-white p-6 rounded shadow text-center">
+          <h4 class="text-lg font-semibold text-gray-700">Pending Approvals</h4>
+          <p class="text-3xl font-bold text-blue-700">${data.pending_approvals}</p>
+        </div>
+      `;
+
+      const recentContainer = document.getElementById('recentBookings');
+      if (data.recent_bookings.length === 0) {
+        recentContainer.innerHTML = '<p>No recent bookings.</p>';
+      } else {
+        recentContainer.innerHTML = data.recent_bookings.map(b => `
+          <div class="bg-white p-4 rounded shadow">
+            <p><strong>${b.guest_name}</strong> booked <strong>${b.room_name}</strong></p>
+            <p class="text-gray-600 text-sm">${b.booking_date} | Status: <span class="font-semibold">${b.status}</span></p>
+          </div>
+        `).join('');
+      }
+    }
+
+    loadDashboard();
+  </script>
+
+</body>
+</html>

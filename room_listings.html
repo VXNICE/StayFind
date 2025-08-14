@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Available Rooms - StayFind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <header class="bg-blue-700 text-white py-4">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold">StayFind</h1>
+      <a href="dashboard_guest.html" class="text-white hover:underline">Back to Dashboard</a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6">Available Staycation Rooms</h2>
+    <div id="roomList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <script>
+    async function fetchRooms() {
+      const res = await fetch('api/get_rooms.php');
+      const data = await res.json();
+
+      const roomList = document.getElementById('roomList');
+      roomList.innerHTML = '';
+
+      if (data.success && data.rooms.length > 0) {
+        data.rooms.forEach(room => {
+          const div = document.createElement('div');
+          div.className = "bg-white rounded shadow p-4";
+
+          const imagePath = room.image ? `uploads/${room.image}` : 'https://via.placeholder.com/300x200';
+
+          div.innerHTML = `
+            <img src="${imagePath}" alt="Room Image" class="w-full h-48 object-cover rounded mb-3">
+            <h3 class="text-lg font-bold">${room.title}</h3>
+            <p class="text-sm text-gray-600 mb-1">Location: ${room.location}</p>
+            <p class="text-sm text-gray-600 mb-2">Price: ₱${room.price} / night</p>
+            <a href="book_room.html?room_id=${room.id}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</a>
+          `;
+
+          roomList.appendChild(div);
+        });
+      } else {
+        roomList.innerHTML = `<p class="text-gray-600">No rooms found.</p>`;
+      }
+    }
+
+    fetchRooms();
+  </script>
+</body>
+</html>

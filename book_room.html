@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Room - StayFind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <header class="bg-blue-700 text-white py-4">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold">StayFind</h1>
+      <a href="room_listings.html" class="text-white hover:underline">Back to Rooms</a>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 py-8 bg-white mt-6 rounded shadow">
+    <h2 class="text-2xl font-semibold mb-4">Book This Room</h2>
+    
+    <div id="roomDetails" class="mb-6 text-gray-700"></div>
+
+    <form id="bookingForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium">Check-in Date</label>
+        <input type="date" name="checkin" required class="mt-1 block w-full border rounded px-3 py-2">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Check-out Date</label>
+        <input type="date" name="checkout" required class="mt-1 block w-full border rounded px-3 py-2">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Submit Booking</button>
+    </form>
+
+    <p id="msg" class="text-center mt-4 text-sm"></p>
+  </main>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('room_id');
+    const roomDetails = document.getElementById('roomDetails');
+    const msg = document.getElementById('msg');
+
+    async function loadRoom() {
+      const res = await fetch(`api/get_room.php?id=${roomId}`);
+      const data = await res.json();
+
+      if (data.success) {
+        const r = data.room;
+        const imagePath = r.image ? `uploads/${r.image}` : 'https://via.placeholder.com/400x200';
+
+        roomDetails.innerHTML = `
+          <img src="${imagePath}" class="w-full h-48 object-cover rounded mb-3">
+          <h3 class="text-lg font-bold">${r.title}</h3>
+          <p class="text-sm text-gray-600">Location: ${r.location}</p>
+          <p class="text-sm text-gray-600">Price: ₱${r.price} / night</p>
+        `;
+      } else {
+        roomDetails.innerHTML = `<p class="text-red-500">Room not found.</p>`;
+      }
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData();
+      formData.append('room_id', roomId);
+      formData.append('checkin', form.checkin.value);
+      formData.append('checkout', form.checkout.value);
+      formData.append('user_id', 1); // Replace this with session or actual logged-in user
+
+      const res = await fetch('api/book_room.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await res.json();
+      msg.textContent = result.message;
+      msg.className = result.success ? 'text-green-600' : 'text-red-500';
+
+      if (result.success) {
+        form.reset();
+      }
+    });
+
+    loadRoom();
+  </script>
+</body>
+</html>

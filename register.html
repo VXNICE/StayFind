@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register - StayFind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">Client Registration</h2>
+
+    <form id="registerForm" class="space-y-4">
+      <input type="text" name="name" placeholder="Full Name" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+      
+      <input type="email" name="email" placeholder="Email Address" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+      
+      <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+      
+      <input type="text" name="phone" placeholder="Phone Number (optional)" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" />
+
+      <button type="submit" class="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800 transition">
+        Register as Client
+      </button>
+    </form>
+
+    <p id="message" class="mt-4 text-center text-sm text-gray-600"></p>
+
+    <p class="mt-6 text-sm text-center text-gray-500">
+      Already have an account? <a href="login.html" class="text-blue-600 hover:underline">Login here</a>
+    </p>
+  </div>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      try {
+        const res = await fetch('api/register_client.php', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+
+        const msg = document.getElementById('message');
+        msg.textContent = result.message;
+        msg.classList.remove('text-red-500', 'text-green-500');
+        msg.classList.add(result.success ? 'text-green-500' : 'text-red-500');
+
+        if (result.success) {
+          form.reset();
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        document.getElementById('message').textContent = 'Something went wrong.';
+      }
+    });
+  </script>
+</body>
+</html>
